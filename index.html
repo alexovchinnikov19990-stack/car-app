@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой автомобиль</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{margin:0;font-family:-apple-system,system-ui;background:#000;color:#fff}
+header{display:flex;gap:6px;padding:10px;background:rgba(0,0,0,.9);position:sticky;top:0;z-index:10}
+header button{background:#222;color:#fff;border:0;padding:8px 12px;border-radius:10px}
+header button.active{background:#4caf50;color:#000}
+.section{display:none;min-height:100vh;padding:16px;background-size:cover;background-position:center}
+.card{background:rgba(0,0,0,.75);padding:14px;border-radius:14px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+input,button{width:100%;padding:10px;margin-top:8px;border-radius:10px;border:0}
+button.add{background:#fff;color:#000;font-weight:600}
+.del{background:none;color:#ff5252;font-size:20px}
+.status-ok{color:#4caf50}
+.status-soon{color:#ffc107}
+.status-late{color:#ff5252}
+</style>
+</head>
+
+<body>
+
+<header>
+<button data-tab="car">🚗 Авто</button>
+<button data-tab="fuel">⛽ Топливо</button>
+<button data-tab="service">🛠 Сервис</button>
+<button data-tab="other">🧾 Прочее</button>
+<button data-tab="rules">🧩 Регламент</button>
+<button data-tab="stats">📊 Итоги</button>
+</header>
+
+<div id="car" class="section">
+<div class="card">
+<input id="brand" placeholder="Марка">
+<input id="model" placeholder="Модель">
+<input id="currentKm" type="number" placeholder="Текущий пробег">
+<button id="saveCar" class="add">Сохранить</button>
+</div>
+</div>
+
+<div id="fuel" class="section">
+<div class="card">
+<input id="fuelKm" type="number" placeholder="Пробег">
+<input id="fuelLiters" type="number" placeholder="Литры">
+<input id="fuelCost" type="number" placeholder="Стоимость">
+<button id="addFuel" class="add">Добавить</button>
+</div>
+<div id="fuelList"></div>
+</div>
+
+<div id="service" class="section">
+<div class="card">
+<input id="srvKm" type="number" placeholder="Пробег">
+<input id="srvDesc" placeholder="Описание работ">
+<input id="srvCost" type="number" placeholder="Стоимость">
+<button id="addService" class="add">Добавить</button>
+</div>
+<div id="serviceList"></div>
+</div>
+
+<div id="other" class="section">
+<div class="card">
+<input id="otherDesc" placeholder="Описание">
+<input id="otherCost" type="number" placeholder="Стоимость">
+<button id="addOther" class="add">Добавить</button>
+</div>
+<div id="otherList"></div>
+</div>
+
+<div id="rules" class="section">
+<div class="card">
+<input id="ruleName" placeholder="Узел">
+<input id="ruleInterval" type="number" placeholder="Интервал, км">
+<button id="addRule" class="add">Добавить</button>
+</div>
+<div id="rulesList"></div>
+</div>
+
+<div id="stats" class="section">
+<div class="card">
+<canvas id="chart"></canvas>
+<div id="statsText"></div>
+<button class="add" id="pdfBtn">📄 PDF отчёт</button>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+
+const KEY='carAppFinalStable';
+let data=JSON.parse(localStorage.getItem(KEY))||{
+ car:{},fuel:[],service:[],other:[],rules:[]
+};
+
+const sections=document.querySelectorAll('.section');
+const tabs=document.querySelectorAll('[data-tab]');
+const show=t=>{
+ sections.forEach(s=>s.style.display=s.id===t?'block':'none');
+ tabs.forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+ localStorage.setItem('tab',t);
+};
+tabs.forEach(b=>b.onclick=()=>show(b.dataset.tab));
+show(localStorage.getItem('tab')||'car');
+
+const save=()=>{localStorage.setItem(KEY,JSON.stringify(data));render();};
+
+brand.value=data.car.brand||'';
+model.value=data.car.model||'';
+currentKm.value=data.car.currentKm||'';
+
+saveCar.onclick=()=>{
+ data.car={brand:brand.value,model:model.value,currentKm:+currentKm.value||0};
+ save();
+};
+
+addFuel.onclick=()=>{
+ if(!fuelKm.value||!fuelCost.value)return;
+ data.fuel.push({km:+fuelKm.value,l:+fuelLiters.value||0,c:+fuelCost.value});
+ fuelKm.value=fuelLiters.value=fuelCost.value='';
+ save();
+};
+
+addService.onclick=()=>{
+ if(!srvKm.value||!srvCost.value)return;
+ data.service.push({km:+srvKm.value,d:srvDesc.value,c:+srvCost.value});
+ srvKm.value=srvDesc.value=srvCost.value='';
+ save();
+};
+
+addOther.onclick=()=>{
+ if(!otherCost.value)return;
+ data.other.push({d:otherDesc.value,c:+otherCost.value});
+ otherDesc.value=otherCost.value='';
+ save();
+};
+
+addRule.onclick=()=>{
+ if(!ruleName.value||!ruleInterval.value)return;
+ data.rules.push({n:ruleName.value,i:+ruleInterval.value});
+ ruleName.value=ruleInterval.value='';
+ save();
+};
+
+window.del=(arr,i)=>{arr.splice(i,1);save();};
+
+let chart;
+function render(){
+ fuelList.innerHTML=data.fuel.map((f,i)=>`<div class="card row">${f.km} км • ${f.l} л • ${f.c} ₽ <button class="del" onclick="del(data.fuel,${i})">🗑</button></div>`).join('');
+ serviceList.innerHTML=data.service.map((s,i)=>`<div class="card row">${s.km} км • ${s.d} • ${s.c} ₽ <button class="del" onclick="del(data.service,${i})">🗑</button></div>`).join('');
+ otherList.innerHTML=data.other.map((o,i)=>`<div class="card row">${o.d} • ${o.c} ₽ <button class="del" onclick="del(data.other,${i})">🗑</button></div>`).join('');
+
+ const cur=data.car.currentKm||0;
+ rulesList.innerHTML=data.rules.map(r=>{
+  const d=cur%r.i;
+  const left=r.i-d;
+  let cls='status-ok',txt='OK';
+  if(left<=0){cls='status-late';txt='Пора';}
+  else if(left<=1000){cls='status-soon';txt='Скоро';}
+  return `<div class="card ${cls}">${r.n} — ${left} км (${txt})</div>`;
+ }).join('');
+
+ const fs=data.fuel.reduce((a,b)=>a+b.c,0);
+ const ss=data.service.reduce((a,b)=>a+b.c,0);
+ const os=data.other.reduce((a,b)=>a+b.c,0);
+
+ statsText.innerHTML=`Всего: ${fs+ss+os} ₽`;
+
+ if(chart)chart.destroy();
+ chart=new Chart(chartCanvas,{
+  type:'doughnut',
+  data:{labels:['Топливо','Сервис','Прочее'],datasets:[{data:[fs,ss,os]}]}
+ });
+}
+const chartCanvas=document.getElementById('chart');
+render();
+
+pdfBtn.onclick=()=>{
+ const img=chartCanvas.toDataURL();
+ const w=window.open('');
+ w.document.write(`<meta charset="utf-8"><h2>Отчёт</h2>
+ <p>${brand.value} ${model.value}</p>
+ <p>Пробег: ${currentKm.value} км</p>
+ <img src="${img}" style="max-width:400px">
+ <script>window.print()</script>`);
+};
+
+});
+</script>
+
+</body>
+</html>
