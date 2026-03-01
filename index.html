@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car App</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+body{margin:0;background:#000;color:#fff;font-family:-apple-system}
+.tabs{display:flex;gap:10px;padding:10px;overflow-x:auto}
+.tab{background:#222;padding:10px 14px;border-radius:12px}
+.tab.active{background:#4caf50}
+.section{display:none;padding:15px}
+.section.active{display:block}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none;font-size:16px}
+button{background:#4caf50;font-weight:700}
+.card{background:#111;border-radius:12px;padding:12px;margin-top:8px;display:flex;justify-content:space-between}
+.del{cursor:pointer}
+.summary{background:#111;padding:12px;border-radius:12px;margin-top:10px}
+canvas{background:#fff;border-radius:12px}
+</style>
+</head>
+
+<body>
+
+<div class="tabs">
+  <div class="tab active" data-tab="auto">🚗 Авто</div>
+  <div class="tab" data-tab="fuel">⛽ Топливо</div>
+  <div class="tab" data-tab="service">🔧 Сервис</div>
+  <div class="tab" data-tab="other">🧾 Прочее</div>
+  <div class="tab" data-tab="reg">🧩 Регламент</div>
+  <div class="tab" data-tab="sum">📊 Итоги</div>
+</div>
+
+<div id="auto" class="section active">
+  <input id="carName" placeholder="Модель авто">
+  <input id="carKm" type="number" placeholder="Текущий пробег (км)">
+  <button onclick="saveAuto()">Сохранить</button>
+</div>
+
+<div id="fuel" class="section"></div>
+<div id="service" class="section"></div>
+<div id="other" class="section"></div>
+<div id="reg" class="section"></div>
+
+<div id="sum" class="section">
+  <canvas id="chart"></canvas>
+  <div class="summary" id="stats"></div>
+  <button onclick="exportPDF()">Выгрузить PDF</button>
+</div>
+
+<script>
+const db=JSON.parse(localStorage.getItem('carApp'))||{
+ auto:{name:'',km:null},
+ fuel:[],service:[],other:[],reg:[]
+};
+const save=()=>localStorage.setItem('carApp',JSON.stringify(db));
+
+document.querySelectorAll('.tab').forEach(t=>{
+ t.onclick=()=>{
+  document.querySelectorAll('.tab,.section').forEach(e=>e.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.tab).classList.add('active');
+  render();
+ };
+});
+
+function saveAuto(){
+ db.auto.name=carName.value;
+ db.auto.km=carKm.value?+carKm.value:null;
+ save();
+}
+
+function listBlock(type,fields){
+ const el=document.getElementById(type);
+ el.innerHTML='';
+ fields.forEach(f=>{
+  el.innerHTML+=`<input id="${type}-${f.id}" placeholder="${f.ph}" type="${f.t||'text'}">`;
+ });
+ el.innerHTML+='<button>Добавить</button>';
+ el.querySelector('button').onclick=()=>{
+  const o={};
+  fields.forEach(f=>o[f.id]=+el.querySelector(`#${type}-${f.id}`).value||el.querySelector(`#${type}-${f.id}`).value);
+  db[type].push(o);save();render();
+ };
+ db[type].forEach((i,n)=>{
+  const d=document.createElement('div');
+  d.className='card';
+  d.innerHTML=`<div>${Object.values(i).join(' • ')}</div><div class="del">🗑</div>`;
+  d.querySelector('.del').onclick=()=>{db[type].splice(n,1);save();render();};
+  el.appendChild(d);
+ });
+}
+
+let chart;
+function render(){
+ carName.value=db.auto.name;
+ carKm.value=db.auto.km||'';
+ listBlock('fuel',[
+  {id:'km',ph:'Пробег',t:'number'},
+  {id:'liters',ph:'Литры',t:'number'},
+  {id:'cost',ph:'Стоимость',t:'number'}
+ ]);
+ listBlock('service',[
+  {id:'km',ph:'Пробег',t:'number'},
+  {id:'desc',ph:'Описание'},
+  {id:'cost',ph:'Стоимость',t:'number'}
+ ]);
+ listBlock('other',[
+  {id:'km',ph:'Пробег',t:'number'},
+  {id:'desc',ph:'Описание'},
+  {id:'cost',ph:'Стоимость',t:'number'}
+ ]);
+ listBlock('reg',[
+  {id:'node',ph:'Узел'},
+  {id:'interval',ph:'Интервал (км)',t:'number'},
+  {id:'last',ph:'Последний пробег',t:'number'}
+ ]);
+
+ const s=[db.fuel,db.service,db.other].map(a=>a.reduce((s,i)=>s+ +i.cost,0));
+ if(chart)chart.destroy();
+ chart=new Chart(chart.getContext?chart:document.getElementById('chart'),{
+  type:'pie',
+  data:{labels:['Топливо','Сервис','Прочее'],
+  datasets:[{data:s,backgroundColor:['#2196f3','#f06292','#ff9800']}]}
+ });
+ const total=s.reduce((a,b)=>a+b,0);
+ const km=db.auto.km||0;
+ stats.innerHTML=`Общие расходы: ${total} ₽<br>Пробег: ${km||'—'} км<br>
+ <b>Стоимость 1 км: ${km? (total/km).toFixed(2):'—'} ₽</b>`;
+}
+
+function exportPDF(){
+ const pdf=new jspdf.jsPDF();
+ pdf.text(db.auto.name||'Отчет',10,10);
+ let y=20;
+ [['Топливо',db.fuel],['Сервис',db.service],['Прочее',db.other]].forEach(([t,a])=>{
+  pdf.text(t,10,y);y+=6;
+  a.forEach(i=>{pdf.text(Object.values(i).join(' | '),10,y);y+=6;});
+  y+=4;
+ });
+ pdf.save('car-report.pdf');
+}
+
+render();
+</script>
+</body>
+</html>
