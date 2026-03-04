@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Auto Control PRO</title>
+
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Auto Control">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+--safe-top: env(safe-area-inset-top);
+--safe-bottom: env(safe-area-inset-bottom);
+}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont;
+background:#111;
+color:#fff;
+padding-top:var(--safe-top);
+padding-bottom:var(--safe-bottom);
+}
+
+nav{display:flex;background:#000;position:sticky;top:0;z-index:10;}
+nav button{flex:1;padding:14px;background:#000;color:#fff;border:none;font-weight:600;}
+nav button.active{background:#1f1f1f;}
+
+section{padding:15px;}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none;font-size:16px;}
+input{background:#222;color:#fff;}
+button.primary{background:#0a84ff;color:#fff;font-weight:600;}
+.card{background:#1a1a1a;padding:12px;margin:8px 0;border-radius:10px;}
+canvas{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<nav>
+<button onclick="switchTab('auto')" id="tab-auto">Авто</button>
+<button onclick="switchTab('fuel')" id="tab-fuel">Топливо</button>
+<button onclick="switchTab('service')" id="tab-service">Сервис</button>
+<button onclick="switchTab('other')" id="tab-other">Прочее</button>
+<button onclick="switchTab('summary')" id="tab-summary">Итоги</button>
+</nav>
+
+<section id="content"></section>
+
+<script>
+const { jsPDF } = window.jspdf;
+let chartPie=null;
+let chartTime=null;
+
+const STORAGE_KEY="autoControlPro_v3";
+
+function id(){return crypto.randomUUID();}
+function num(v){const n=Number(v);return isNaN(n)?0:n;}
+
+function formatDate(d){
+const date=new Date(d);
+return String(date.getDate()).padStart(2,'0')+"."+String(date.getMonth()+1).padStart(2,'0')+"."+date.getFullYear();
+}
+
+function load(){
+const raw=localStorage.getItem(STORAGE_KEY);
+if(!raw)return{auto:{model:"",mileage:null},fuel:[],service:[],other:[]};
+return JSON.parse(raw);
+}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+
+let state=load();
+let current="auto";
+
+function switchTab(t){
+current=t;
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+document.getElementById("tab-"+t).classList.add("active");
+render();
+}
+
+function render(){
+content.innerHTML="";
+if(current==="auto")autoTab();
+if(current==="fuel")fuelTab();
+if(current==="service")serviceTab();
+if(current==="other")otherTab();
+if(current==="summary")summaryTab();
+}
+
+/* AUTO */
+
+function autoTab(){
+content.innerHTML=`
+<h2>Авто</h2>
+<input id="model" placeholder="Модель" value="${state.auto.model}">
+<input id="mileage" type="number" placeholder="Текущий пробег" value="${state.auto.mileage??""}">
+<button class="primary" onclick="saveAuto()">Сохранить</button>`;
+}
+
+function saveAuto(){
+state.auto.model=model.value;
+state.auto.mileage=mileage.value?Number(mileage.value):null;
+save();
+alert("Сохранено");
+}
+
+/* FUEL */
+
+function fuelTab(){
+content.innerHTML=`
+<h2>Топливо</h2>
+<input type="date" id="d">
+<input type="number" id="km" placeholder="Пробег">
+<input type="number" id="l" placeholder="Литры">
+<input type="number" id="p" placeholder="Сумма">
+<button class="primary" onclick="addFuel()">Добавить</button>
+<div id="list"></div>`;
+renderFuel();
+}
+
+function addFuel(){
+if(!d.value||!km.value||!l.value||!p.value)return alert("Заполни всё");
+state.fuel.push({id:id(),date:d.value,km:num(km.value),liters:num(l.value),price:num(p.value)});
+save();fuelTab();
+}
+
+function renderFuel(){
+list.innerHTML=state.fuel.map(f=>`
+<div class="card">
+<b>${formatDate(f.date)}</b>
+<div>${f.km} км</div>
+<div>${f.liters}л — ${f.price}₽</div>
+<button onclick="del('fuel','${f.id}')">Удалить</button>
+</div>`).join("");
+}
+
+/* SERVICE */
+
+function serviceTab(){
+content.innerHTML=`
+<h2>Сервис</h2>
+<input type="date" id="sd">
+<input type="number" id="skm" placeholder="Пробег">
+<input id="desc" placeholder="Описание">
+<input type="number" id="sp" placeholder="Сумма">
+<button class="primary" onclick="addService()">Добавить</button>
+<div id="slist"></div>`;
+renderService();
+}
+
+function addService(){
+if(!sd.value||!skm.value||!desc.value||!sp.value)return alert("Заполни всё");
+state.service.push({id:id(),date:sd.value,km:num(skm.value),desc:desc.value,price:num(sp.value)});
+save();serviceTab();
+}
+
+function renderService(){
+slist.innerHTML=state.service.map(s=>`
+<div class="card">
+<b>${formatDate(s.date)}</b>
+<div>${s.km} км</div>
+<div>${s.desc} — ${s.price}₽</div>
+<button onclick="del('service','${s.id}')">Удалить</button>
+</div>`).join("");
+}
+
+/* OTHER */
+
+function otherTab(){
+content.innerHTML=`
+<h2>Прочее</h2>
+<input type="date" id="od">
+<input id="odesc" placeholder="Описание">
+<input type="number" id="op" placeholder="Сумма">
+<button class="primary" onclick="addOther()">Добавить</button>
+<div id="olist"></div>`;
+renderOther();
+}
+
+function addOther(){
+if(!od.value||!odesc.value||!op.value)return alert("Заполни всё");
+state.other.push({id:id(),date:od.value,desc:odesc.value,price:num(op.value)});
+save();otherTab();
+}
+
+function renderOther(){
+olist.innerHTML=state.other.map(o=>`
+<div class="card">
+<b>${formatDate(o.date)}</b>
+<div>${o.desc} — ${o.price}₽</div>
+<button onclick="del('other','${o.id}')">Удалить</button>
+</div>`).join("");
+}
+
+function del(type,id){
+state[type]=state[type].filter(x=>x.id!==id);
+save();render();
+}
+
+/* SUMMARY */
+
+function summaryTab(){
+const fuel=state.fuel.reduce((a,b)=>a+b.price,0);
+const service=state.service.reduce((a,b)=>a+b.price,0);
+const other=state.other.reduce((a,b)=>a+b.price,0);
+
+content.innerHTML=`
+<h2>Итоги</h2>
+<canvas id="pie"></canvas>
+<canvas id="time"></canvas>
+<button class="primary" onclick="exportPDF()">Экспорт PDF</button>`;
+
+if(chartPie)chartPie.destroy();
+if(chartTime)chartTime.destroy();
+
+chartPie=new Chart(pie,{
+type:'pie',
+data:{labels:['Топливо','Сервис','Прочее'],datasets:[{data:[fuel,service,other]}]}
+});
+
+/* TIME GRAPH */
+
+const monthly={};
+
+[...state.fuel,...state.service,...state.other].forEach(e=>{
+const d=new Date(e.date);
+const key=(d.getMonth()+1).toString().padStart(2,'0')+"."+d.getFullYear();
+monthly[key]=(monthly[key]||0)+e.price;
+});
+
+const sorted=Object.keys(monthly).sort((a,b)=>{
+const [ma,ya]=a.split(".");
+const [mb,yb]=b.split(".");
+return new Date(ya,ma-1)-new Date(yb,mb-1);
+});
+
+chartTime=new Chart(time,{
+type:'line',
+data:{labels:sorted,datasets:[{label:'Расходы',data:sorted.map(k=>monthly[k])}]}
+});
+}
+
+/* PDF */
+
+function exportPDF(){
+const doc=new jsPDF();
+let y=10;
+doc.text("Auto Control PRO",10,y);y+=10;
+
+doc.text("Авто:",10,y);y+=8;
+doc.text("Модель: "+state.auto.model,10,y);y+=8;
+doc.text("Пробег: "+(state.auto.mileage??"-")+" км",10,y);y+=10;
+
+function block(title,list,format){
+doc.text(title,10,y);y+=8;
+list.forEach(i=>{
+doc.text(format(i),10,y);y+=8;
+if(y>280){doc.addPage();y=10;}
+});
+y+=5;
+}
+
+block("Топливо",state.fuel,f=>formatDate(f.date)+" | "+f.km+"км | "+f.liters+"л | "+f.price+"₽");
+block("Сервис",state.service,s=>formatDate(s.date)+" | "+s.km+"км | "+s.desc+" | "+s.price+"₽");
+block("Прочее",state.other,o=>formatDate(o.date)+" | "+o.desc+" | "+o.price+"₽");
+
+doc.addPage();
+doc.text("Диаграммы:",10,10);
+doc.addImage(pie.toDataURL(),"PNG",10,20,180,80);
+doc.addImage(time.toDataURL(),"PNG",10,110,180,80);
+
+doc.save("auto_report_full.pdf");
+}
+
+switchTab("auto");
+
+/* SERVICE WORKER */
+
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
