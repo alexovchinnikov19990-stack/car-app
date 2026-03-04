@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Auto Control PRO+</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont;
+background:#111;
+color:#fff;
+}
+
+nav{
+display:flex;
+background:#000;
+position:sticky;
+top:0;
+z-index:10;
+}
+
+nav button{
+flex:1;
+padding:14px 6px;
+background:#000;
+color:#fff;
+border:none;
+font-weight:600;
+font-size:13px;
+}
+
+nav button.active{
+background:#1f1f1f;
+border-radius:10px;
+}
+
+/* HEADER */
+.header-bg{
+height:220px;
+background-size:cover;
+background-position:center;
+position:relative;
+display:flex;
+align-items:flex-end;
+padding:20px;
+}
+
+.header-bg::after{
+content:"";
+position:absolute;
+inset:0;
+background:linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.85));
+}
+
+.header-bg h2{
+position:relative;
+z-index:1;
+margin:0;
+font-size:28px;
+}
+
+/* BODY */
+.section-body{
+padding:15px;
+padding-bottom:80px;
+}
+
+input,button,select{
+width:100%;
+padding:12px;
+margin:6px 0;
+border-radius:10px;
+border:none;
+font-size:16px;
+}
+
+input,select{
+background:#222;
+color:#fff;
+}
+
+button.primary{
+background:#0a84ff;
+color:#fff;
+}
+
+.card,.stat{
+background:#1a1a1a;
+padding:12px;
+margin:10px 0;
+border-radius:12px;
+}
+
+canvas{
+background:#fff;
+border-radius:12px;
+margin-top:20px;
+max-height:320px;
+}
+</style>
+</head>
+<body>
+
+<nav>
+<button onclick="switchTab('auto')" id="tab-auto">Авто</button>
+<button onclick="switchTab('fuel')" id="tab-fuel">Топливо</button>
+<button onclick="switchTab('service')" id="tab-service">Сервис</button>
+<button onclick="switchTab('other')" id="tab-other">Прочее</button>
+<button onclick="switchTab('summary')" id="tab-summary">Итоги</button>
+</nav>
+
+<div id="content"></div>
+
+<script>
+const STORAGE_KEY="auto_core_v10";
+let state=JSON.parse(localStorage.getItem(STORAGE_KEY))||{
+auto:{},
+fuel:[],
+service:[],
+other:[]
+};
+
+let currentTab="auto";
+let pieChart,expenseChart;
+
+function save(){
+localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
+
+function id(){ return crypto.randomUUID(); }
+function num(v){ return Number(v)||0; }
+
+function switchTab(tab){
+currentTab=tab;
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+document.getElementById("tab-"+tab).classList.add("active");
+render();
+}
+
+function header(title,img){
+return `
+<div class="header-bg" style="background-image:url('./images/${img}')">
+<h2>${title}</h2>
+</div>
+<div class="section-body">
+`;
+}
+
+/* AUTO */
+function renderAuto(){
+content.innerHTML=
+header("Авто","bg-car.jpg")+`
+<input id="model" placeholder="Модель" value="${state.auto.model||""}">
+<input id="mileage" type="number" placeholder="Пробег" value="${state.auto.mileage||""}">
+<button class="primary" onclick="saveAuto()">Сохранить</button>
+</div>`;
+}
+
+function saveAuto(){
+state.auto.model=model.value.trim();
+state.auto.mileage=num(mileage.value);
+save();
+}
+
+/* FUEL */
+function renderFuel(){
+content.innerHTML=
+header("Топливо","bg-fuel.jpg")+`
+<input type="date" id="fdate">
+<input type="number" id="fkm" placeholder="Пробег">
+<input type="number" id="fliters" placeholder="Литры">
+<input type="number" id="fprice" placeholder="Сумма">
+<button class="primary" onclick="addFuel()">Добавить</button>
+<div id="fuelList"></div>
+</div>`;
+
+fuelList.innerHTML=state.fuel.map(f=>`
+<div class="card">
+<b>${f.date}</b><br>
+${f.km} км — ${f.liters} л — ${f.price} ₽
+<button onclick="removeItem('fuel','${f.id}')">Удалить</button>
+</div>`).join("");
+}
+
+function addFuel(){
+if(!fdate.value || !fkm.value || !fliters.value || !fprice.value) return;
+
+state.fuel.push({
+id:id(),
+date:fdate.value,
+km:num(fkm.value),
+liters:num(fliters.value),
+price:num(fprice.value)
+});
+
+save();
+renderFuel();
+}
+
+/* SERVICE */
+function renderService(){
+content.innerHTML=
+header("Сервис","bg-service.jpg")+`
+<input id="sdate" type="date">
+<input id="sdesc" placeholder="Описание">
+<input type="number" id="sprice" placeholder="Сумма">
+<button class="primary" onclick="addService()">Добавить</button>
+<div id="serviceList"></div>
+</div>`;
+
+serviceList.innerHTML=state.service.map(s=>`
+<div class="card">
+<b>${s.date||""}</b><br>
+${s.desc} — ${s.price} ₽
+<button onclick="removeItem('service','${s.id}')">Удалить</button>
+</div>`).join("");
+}
+
+function addService(){
+if(!sdesc.value || !sprice.value) return;
+
+state.service.push({
+id:id(),
+date:sdate.value,
+desc:sdesc.value.trim(),
+price:num(sprice.value)
+});
+save();
+renderService();
+}
+
+/* OTHER */
+function renderOther(){
+content.innerHTML=
+header("Прочее","bg-rules.jpg")+`
+<input id="odate" type="date">
+<input id="odesc" placeholder="Описание">
+<input type="number" id="oprice" placeholder="Сумма">
+<button class="primary" onclick="addOther()">Добавить</button>
+<div id="otherList"></div>
+</div>`;
+
+otherList.innerHTML=state.other.map(o=>`
+<div class="card">
+<b>${o.date||""}</b><br>
+${o.desc} — ${o.price} ₽
+<button onclick="removeItem('other','${o.id}')">Удалить</button>
+</div>`).join("");
+}
+
+function addOther(){
+if(!odesc.value || !oprice.value) return;
+
+state.other.push({
+id:id(),
+date:odate.value,
+desc:odesc.value.trim(),
+price:num(oprice.value)
+});
+save();
+renderOther();
+}
+
+/* SUMMARY */
+function renderSummary(){
+
+let months=[...new Set(state.fuel.map(f=>f.date?.slice(0,7)).filter(Boolean))];
+
+let monthSelectHTML=`
+<select id="monthSelect">
+<option value="all">Всё время</option>
+${months.map(m=>`<option value="${m}">${m}</option>`).join("")}
+</select>
+`;
+
+content.innerHTML=
+header("Итоги","bg-stats.jpg")+`
+<div class="stat">${monthSelectHTML}</div>
+<div id="summaryContent"></div>
+</div>`;
+
+document.getElementById("monthSelect").onchange=updateSummary;
+updateSummary();
+}
+
+function updateSummary(){
+
+let selected=document.getElementById("monthSelect").value;
+
+function filter(arr){
+if(selected==="all") return arr;
+return arr.filter(i=>i.date && i.date.startsWith(selected));
+}
+
+const fuelData=filter(state.fuel);
+const serviceData=filter(state.service);
+const otherData=filter(state.other);
+
+const fuelSum=fuelData.reduce((a,b)=>a+b.price,0);
+const serviceSum=serviceData.reduce((a,b)=>a+b.price,0);
+const otherSum=otherData.reduce((a,b)=>a+b.price,0);
+const total=fuelSum+serviceSum+otherSum;
+
+const totalKm=fuelData.reduce((a,b)=>a+b.km,0);
+const totalLiters=fuelData.reduce((a,b)=>a+b.liters,0);
+const avgConsumption= totalKm ? (totalLiters/totalKm*100).toFixed(2) : 0;
+
+summaryContent.innerHTML=`
+<div class="stat">Общие расходы: ${total} ₽</div>
+<div class="stat">Средний расход: ${avgConsumption} л / 100 км</div>
+<canvas id="pieChart"></canvas>
+<canvas id="expenseChart"></canvas>
+`;
+
+if(pieChart) pieChart.destroy();
+if(expenseChart) expenseChart.destroy();
+
+pieChart=new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:["Топливо","Сервис","Прочее"],
+datasets:[{data:[fuelSum,serviceSum,otherSum]}]
+}
+});
+
+expenseChart=new Chart(document.getElementById("expenseChart"),{
+type:"line",
+data:{
+labels:fuelData.map(f=>f.date),
+datasets:[{
+label:"Расход топлива",
+data:fuelData.map(f=>f.price),
+fill:false,
+tension:0.3
+}]
+}
+});
+}
+
+function removeItem(type,id){
+state[type]=state[type].filter(i=>i.id!==id);
+save();
+render();
+}
+
+function render(){
+if(currentTab==="auto") renderAuto();
+if(currentTab==="fuel") renderFuel();
+if(currentTab==="service") renderService();
+if(currentTab==="other") renderOther();
+if(currentTab==="summary") renderSummary();
+}
+
+switchTab("auto");
+</script>
+
+</body>
+</html>
