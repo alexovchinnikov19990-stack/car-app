@@ -1,79 +1,49 @@
 function addFuel(){
 
-let date = document.getElementById("fuelDate").value
-let km = Number(document.getElementById("fuelKm").value)
-let liters = Number(document.getElementById("fuelLiters").value)
-let price = Number(document.getElementById("fuelPrice").value)
+    const date = document.getElementById("fuelDate").value
+    const odo = Number(document.getElementById("fuelOdo").value)
+    const liters = Number(document.getElementById("fuelLiters").value)
+    const price = Number(document.getElementById("fuelPrice").value)
 
-if(!date || !km || !liters || !price) return
+    if(!date || !odo || !liters || !price){
+        alert("Заполни все поля")
+        return
+    }
 
-state.fuel.push({date,km,liters,price})
+    APP_STATE.fuel.push({
+        date,
+        odo,
+        liters,
+        price
+    })
 
-state.fuel.sort((a,b)=> new Date(a.date)-new Date(b.date))
-
-save()
-
-renderFuel()
-updateStats()
-drawCharts()
-
-}
-
-function deleteFuel(i){
-
-if(!confirm("Удалить запись?")) return
-
-state.fuel.splice(i,1)
-
-save()
-
-renderFuel()
-updateStats()
-drawCharts()
-
+    saveState()
+    renderFuel()
 }
 
 function renderFuel(){
 
-let tbody = document.querySelector("#fuelTable tbody")
+    const table = document.getElementById("fuelTable")
 
-tbody.innerHTML=""
+    if(!table) return
 
-state.fuel.forEach((f,i)=>{
+    table.innerHTML = ""
 
-let prev = state.fuel[i-1]
+    APP_STATE.fuel.forEach(row=>{
 
-let pricePer = (f.price/f.liters).toFixed(2)
+        const tr = document.createElement("tr")
 
-let cons="-"
+        const sum = (row.liters * row.price).toFixed(2)
 
-if(prev){
+        tr.innerHTML = `
+        <td>${row.date}</td>
+        <td>${row.odo}</td>
+        <td>${row.liters}</td>
+        <td>${sum}</td>
+        `
 
-let km = f.km-prev.km
+        table.appendChild(tr)
 
-cons = (f.liters/km*100).toFixed(2)
-
-}
-
-tbody.innerHTML+=`
-
-<tr>
-
-<td>${f.date}</td>
-<td>${f.km}</td>
-<td>${f.liters}</td>
-<td>${f.price}</td>
-<td>${pricePer}</td>
-<td>${cons}</td>
-
-<td>
-<button onclick="deleteFuel(${i})">X</button>
-</td>
-
-</tr>
-
-`
-
-})
+    })
 
 }
