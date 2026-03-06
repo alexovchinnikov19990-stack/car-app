@@ -1,49 +1,29 @@
-import {state} from "../state.js"
+export function totalFuel(list){
 
-export function totalFuel(){
-
-return state.fuel.reduce((a,b)=>a+b.sum,0)
+return list.reduce((sum,i)=>sum+i.sum,0)
 
 }
 
-export function averageConsumption(){
+export function avgConsumption(list){
 
-if(state.fuel.length<2)return "-"
+const valid = list.filter(i=>i.consumption)
 
-let total=0
-let count=0
+if(valid.length===0) return null
 
-for(let i=1;i<state.fuel.length;i++){
+const sum = valid.reduce((s,i)=>s+i.consumption,0)
 
-const prev=state.fuel[i-1]
-const cur=state.fuel[i]
-
-const dist=cur.odo-prev.odo
-
-if(dist>0){
-
-total+=cur.liters/dist*100
-count++
+return sum/valid.length
 
 }
 
-}
+export function costPerKm(list){
 
-return (total/count).toFixed(2)
+if(list.length<2) return null
 
-}
+const total = totalFuel(list)
 
-export function costPerKm(){
+const km = list[list.length-1].mileage - list[0].mileage
 
-if(state.fuel.length<2)return "-"
-
-const first=state.fuel[0]
-const last=state.fuel[state.fuel.length-1]
-
-const dist=last.odo-first.odo
-
-const cost=totalFuel()
-
-return (cost/dist).toFixed(2)
+return total/km
 
 }
