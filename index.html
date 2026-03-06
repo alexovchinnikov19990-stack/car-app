@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Belgee X50</title>
 
@@ -12,16 +13,17 @@
 
 body{
 font-family:Arial;
-margin:0;
 background:#0b0b0b;
 color:white;
+margin:0;
+padding:0;
 }
 
 header{
 background:black;
-padding:20px;
 text-align:center;
-font-size:26px;
+padding:15px;
+font-size:22px;
 font-weight:bold;
 }
 
@@ -30,13 +32,12 @@ display:flex;
 gap:10px;
 padding:10px;
 overflow:auto;
-background:#1a1a1a;
 }
 
 nav button{
 background:#333;
-border:none;
 color:white;
+border:none;
 padding:10px 16px;
 border-radius:10px;
 }
@@ -52,42 +53,34 @@ display:block;
 
 input{
 width:100%;
-padding:14px;
-margin:10px 0;
+padding:12px;
+margin:8px 0;
 border-radius:10px;
 border:none;
-font-size:16px;
 }
 
-button.main{
+button{
+padding:10px 16px;
+border-radius:10px;
+border:none;
 background:#444;
 color:white;
-padding:12px 18px;
-border:none;
-border-radius:10px;
-margin-top:10px;
 }
 
 table{
 width:100%;
-margin-top:20px;
+margin-top:15px;
 border-collapse:collapse;
 }
 
 td,th{
 padding:8px;
-text-align:center;
-}
-
-canvas{
-margin-top:40px;
-background:white;
-border-radius:10px;
+border-bottom:1px solid #333;
 }
 
 </style>
-</head>
 
+</head>
 <body>
 
 <header>Belgee X50</header>
@@ -108,25 +101,32 @@ border-radius:10px;
 
 <h2>Топливо</h2>
 
-<input type="date" id="fuelDate">
-<input type="number" placeholder="Пробег" id="fuelKm">
-<input type="number" placeholder="Литры" id="fuelLiters">
-<input type="number" placeholder="Сумма" id="fuelPrice">
+<input id="fuelDate" type="date">
 
-<button class="main" onclick="addFuel()">Добавить</button>
+<input id="fuelKm" placeholder="Пробег">
+
+<input id="fuelLiters" placeholder="Литры">
+
+<input id="fuelPrice" placeholder="Сумма">
+
+<button onclick="addFuel()">Добавить</button>
 
 <table id="fuelTable">
 
 <thead>
+
 <tr>
+
 <th>Дата</th>
-<th>Пробег</th>
+<th>Км</th>
 <th>Литры</th>
 <th>Сумма</th>
 <th>Цена/л</th>
 <th>Расход</th>
 <th></th>
+
 </tr>
+
 </thead>
 
 <tbody></tbody>
@@ -142,9 +142,10 @@ border-radius:10px;
 <h2>Сервис</h2>
 
 <input id="serviceName" placeholder="Работа">
-<input id="servicePrice" type="number" placeholder="Стоимость">
 
-<button class="main" onclick="addService()">Добавить</button>
+<input id="servicePrice" placeholder="Стоимость">
+
+<button onclick="addService()">Добавить</button>
 
 <ul id="serviceList"></ul>
 
@@ -156,10 +157,11 @@ border-radius:10px;
 
 <h2>Прочее</h2>
 
-<input id="otherName" placeholder="Описание">
-<input id="otherPrice" type="number" placeholder="Стоимость">
+<input id="otherName" placeholder="Расход">
 
-<button class="main" onclick="addOther()">Добавить</button>
+<input id="otherPrice" placeholder="Стоимость">
+
+<button onclick="addOther()">Добавить</button>
 
 <ul id="otherList"></ul>
 
@@ -172,13 +174,18 @@ border-radius:10px;
 <h2>Итоги</h2>
 
 <p>Топливо: <span id="fuelTotal">0</span></p>
+
 <p>Сервис: <span id="serviceTotal">0</span></p>
+
 <p>Прочее: <span id="otherTotal">0</span></p>
 
 <p><b>Всего: <span id="allTotal">0</span></b></p>
 
-<p>Средний расход: <span id="avg">-</span></p>
-<p>Стоимость 1 км: <span id="kmCost">-</span></p>
+<p>Средний расход: <span id="avg">0</span></p>
+
+<p>Стоимость 1 км: <span id="kmCost">0</span></p>
+
+<h2>Аналитика</h2>
 
 <canvas id="chartFuel"></canvas>
 
@@ -194,24 +201,29 @@ border-radius:10px;
 
 <h3>Backup</h3>
 
-<button class="main" onclick="downloadBackup()">Скачать backup</button>
+<button onclick="downloadBackup()">Скачать backup</button>
 
 <br><br>
 
 <input type="file" id="backupFile">
 
-<br>
+<br><br>
 
-<button class="main" onclick="restoreBackup()">Восстановить backup</button>
+<button onclick="restoreBackup()">Восстановить backup</button>
 
 </section>
 
+
+<!-- JS ФАЙЛЫ (ВАЖЕН ПОРЯДОК) -->
+
 <script src="state.js"></script>
 <script src="storage.js"></script>
+
 <script src="domain/fuel.js"></script>
-<script src="domain/analytics.js"></script>
 <script src="domain/service.js"></script>
 <script src="domain/other.js"></script>
+<script src="domain/analytics.js"></script>
+
 <script src="charts.js"></script>
 <script src="app.js"></script>
 
