@@ -1,7 +1,5 @@
-let state = {
-
-fuel:[],
-service:[],
-other:[]
-
+window.APP_STATE = {
+    fuel: [],
+    service: [],
+    other: []
 }
