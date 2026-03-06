@@ -4,7 +4,10 @@ export function exportBackup(){
 
     const data = JSON.stringify(state, null, 2);
 
-    const blob = new Blob([data], {type:"application/json"});
+    const blob = new Blob(
+        [data],
+        { type:"application/json" }
+    );
 
     const url = URL.createObjectURL(blob);
 
@@ -13,7 +16,11 @@ export function exportBackup(){
     a.href = url;
     a.download = "belgee_backup.json";
 
+    document.body.appendChild(a);
+
     a.click();
+
+    document.body.removeChild(a);
 
 }
 
