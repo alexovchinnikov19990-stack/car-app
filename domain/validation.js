@@ -1,9 +1,9 @@
-export function validateOdo(state,newOdo){
+export function validateMileage(newMileage, fuelList){
 
-if(state.fuel.length===0)return true
+if(fuelList.length === 0) return true
 
-const last=state.fuel[state.fuel.length-1]
+const maxMileage = Math.max(...fuelList.map(f => f.mileage))
 
-return newOdo>last.odo
+return newMileage > maxMileage
 
 }
