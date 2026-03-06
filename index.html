@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Belgee X50</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<h1>Belgee X50</h1>
+
+<button onclick="createBackup()">Создать бэкап</button>
+<input type="file" id="restoreFile">
+
+<h2>Топливо</h2>
+
+<input type="date" id="date">
+<input type="number" id="mileage" placeholder="Пробег">
+<input type="number" id="liters" placeholder="Литры">
+<input type="number" id="sum" placeholder="Сумма">
+
+<button onclick="addFuel()">Добавить</button>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Дата</th>
+<th>Пробег</th>
+<th>Литры</th>
+<th>Сумма</th>
+<th>Цена/л</th>
+<th>Расход</th>
+<th></th>
+</tr>
+
+</thead>
+
+<tbody id="fuelTable"></tbody>
+
+</table>
+
+<h2>Итоги</h2>
+
+<div>Топливо: <span id="fuelTotal">0</span></div>
+<div>Всего: <span id="total">0</span></div>
+<div>Средний расход: <span id="avg">-</span></div>
+<div>Стоимость 1 км: <span id="costKm">-</span></div>
+
+<h2>Аналитика</h2>
+
+<canvas id="fuelChart"></canvas>
+<canvas id="expenseChart"></canvas>
+<canvas id="mileageChart"></canvas>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
