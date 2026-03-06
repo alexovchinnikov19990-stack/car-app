@@ -1,27 +1,13 @@
-document.addEventListener("DOMContentLoaded", initApp)
+document.addEventListener("DOMContentLoaded", startApp)
 
-function initApp(){
+function startApp(){
 
-    console.log("APP STARTED")
+    console.log("APP START")
 
-    if(typeof renderFuel === "function"){
-        renderFuel()
-    }
+    loadState()
 
-    if(typeof renderService === "function"){
-        renderService()
-    }
-
-    if(typeof renderOther === "function"){
-        renderOther()
-    }
-
-    if(typeof updateStats === "function"){
-        updateStats()
-    }
-
-    if(typeof drawCharts === "function"){
-        drawCharts()
-    }
+    renderFuel()
+    renderService()
+    renderOther()
 
 }
