@@ -1,20 +1,16 @@
-import { state } from "./state.js"
+function save(){
 
-export function save(){
-
-localStorage.setItem("carData", JSON.stringify(state))
+localStorage.setItem("carData",JSON.stringify(state))
 
 }
 
-export function load(){
+function load(){
 
-const data = localStorage.getItem("carData")
+let data = localStorage.getItem("carData")
 
 if(data){
 
-const parsed = JSON.parse(data)
-
-Object.assign(state, parsed)
+state = JSON.parse(data)
 
 }
 
