@@ -1,96 +1,55 @@
-import { state } from "./state.js"
-import { save, load } from "./storage.js"
-
-import { calculateFuelData } from "./domain/fuel.js"
-import { validateMileage } from "./domain/validation.js"
-import { totalFuel, avgConsumption, costPerKm } from "./domain/analytics.js"
-
 load()
 
-window.addFuel = function(){
+renderFuel()
+renderService()
+renderOther()
+updateStats()
+drawCharts()
 
-const date = document.getElementById("date").value
-const mileage = Number(document.getElementById("mileage").value)
-const liters = Number(document.getElementById("liters").value)
-const sum = Number(document.getElementById("sum").value)
+function openTab(id){
 
-if(!validateMileage(mileage,state.fuel)){
+document.querySelectorAll("section").forEach(s=>{
+s.classList.remove("active")
+})
 
-alert("Пробег должен быть больше предыдущего")
-
-return
+document.getElementById(id).classList.add("active")
 
 }
 
-state.fuel.push({
+function downloadBackup(){
 
-date,
-mileage,
-liters,
-sum
+let data = JSON.stringify(state)
 
-})
+let blob = new Blob([data],{type:"application/json"})
 
-state.fuel.sort((a,b)=> new Date(a.date)-new Date(b.date))
+let a = document.createElement("a")
 
-calculateFuelData(state.fuel)
+a.href = URL.createObjectURL(blob)
+
+a.download = "car_backup.json"
+
+a.click()
+
+}
+
+function restoreBackup(){
+
+let file = document.getElementById("backupFile").files[0]
+
+if(!file) return
+
+let reader = new FileReader()
+
+reader.onload = function(){
+
+state = JSON.parse(reader.result)
 
 save()
 
-render()
+location.reload()
 
 }
 
-function render(){
-
-const table = document.getElementById("fuelTable")
-
-table.innerHTML=""
-
-state.fuel.forEach((f,i)=>{
-
-const tr=document.createElement("tr")
-
-tr.innerHTML=`
-<td>${f.date}</td>
-<td>${f.mileage}</td>
-<td>${f.liters}</td>
-<td>${f.sum}</td>
-<td>${f.price?.toFixed(2)}</td>
-<td>${f.consumption?f.consumption.toFixed(2):"-"}</td>
-<td><button onclick="removeFuel(${i})">Удалить</button></td>
-`
-
-table.appendChild(tr)
-
-})
-
-document.getElementById("fuelTotal").innerText=totalFuel(state.fuel)
-
-document.getElementById("total").innerText=totalFuel(state.fuel)
-
-const avg=avgConsumption(state.fuel)
-
-document.getElementById("avg").innerText=avg?avg.toFixed(2):"-"
-
-const cost=costPerKm(state.fuel)
-
-document.getElementById("costKm").innerText=cost?cost.toFixed(2):"-"
+reader.readAsText(file)
 
 }
-
-window.removeFuel=function(index){
-
-if(!confirm("Удалить запись?")) return
-
-state.fuel.splice(index,1)
-
-calculateFuelData(state.fuel)
-
-save()
-
-render()
-
-}
-
-render()
