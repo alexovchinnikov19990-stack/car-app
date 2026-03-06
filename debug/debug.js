@@ -1,5 +1,3 @@
-import { state } from "../state/state.js";
-
 export const DEBUG = true;
 
 export function log(...args){
@@ -13,8 +11,11 @@ export function log(...args){
 
 }
 
-export function dumpState(){
+export function dumpState(state){
 
-    console.table(state.fuel);
+    if(!DEBUG) return;
+
+    console.log("===== STATE =====");
+    console.log(JSON.stringify(state, null, 2));
 
 }
