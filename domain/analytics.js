@@ -1,29 +1,39 @@
-export function totalFuel(list){
+// domain/analytics.js
 
-return list.reduce((sum,i)=>sum+i.sum,0)
+import { state } from "../state/state.js";
+
+export function getAverageConsumption(){
+
+    const values=state.fuel
+        .map(r=>r.consumption)
+        .filter(v=>v!==null);
+
+    if(values.length===0){
+        return 0;
+    }
+
+    const sum=values.reduce((a,b)=>a+b,0);
+
+    return sum/values.length;
 
 }
 
-export function avgConsumption(list){
+export function getFuelChartData(){
 
-const valid = list.filter(i=>i.consumption)
+    const labels=[];
+    const values=[];
 
-if(valid.length===0) return null
+    state.fuel.forEach(r=>{
 
-const sum = valid.reduce((s,i)=>s+i.consumption,0)
+        if(r.consumption!==null){
 
-return sum/valid.length
+            labels.push(r.date);
+            values.push(r.consumption);
 
-}
+        }
 
-export function costPerKm(list){
+    });
 
-if(list.length<2) return null
-
-const total = totalFuel(list)
-
-const km = list[list.length-1].mileage - list[0].mileage
-
-return total/km
+    return {labels,values};
 
 }
