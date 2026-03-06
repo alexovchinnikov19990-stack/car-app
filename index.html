@@ -1,51 +1,49 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Belgee X50 Tracker</title>
+<title>Belgee X50</title>
 
-<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 margin:0;
-padding:0;
-background:#111;
-color:#fff;
+background:#0b0b0b;
+color:white;
 }
 
 header{
-background:#000;
-padding:15px;
+background:black;
+padding:20px;
 text-align:center;
-font-size:20px;
+font-size:26px;
 font-weight:bold;
 }
 
 nav{
 display:flex;
-justify-content:space-around;
-background:#222;
+gap:10px;
 padding:10px;
+overflow:auto;
+background:#1a1a1a;
 }
 
 nav button{
 background:#333;
 border:none;
 color:white;
-padding:10px;
-border-radius:6px;
+padding:10px 16px;
+border-radius:10px;
 }
 
 section{
 display:none;
-padding:15px;
+padding:20px;
 }
 
 section.active{
@@ -54,116 +52,139 @@ display:block;
 
 input{
 width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:10px;
-border-radius:6px;
+padding:14px;
+margin:10px 0;
+border-radius:10px;
 border:none;
+font-size:16px;
 }
 
-button{
-padding:10px;
-border:none;
-border-radius:6px;
+button.main{
 background:#444;
 color:white;
+padding:12px 18px;
+border:none;
+border-radius:10px;
+margin-top:10px;
+}
+
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+td,th{
+padding:8px;
+text-align:center;
 }
 
 canvas{
-background:#fff;
-margin-top:20px;
+margin-top:40px;
+background:white;
+border-radius:10px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>
-Belgee X50
-</header>
+<header>Belgee X50</header>
 
 <nav>
 
-<button onclick="showTab('fuel')">
-Топливо
-</button>
-
-<button onclick="showTab('service')">
-Сервис
-</button>
-
-<button onclick="showTab('other')">
-Прочее
-</button>
-
-<button onclick="showTab('stats')">
-Итоги
-</button>
-
-<button onclick="showTab('car')">
-Авто
-</button>
+<button onclick="openTab('fuel')">Топливо</button>
+<button onclick="openTab('service')">Сервис</button>
+<button onclick="openTab('other')">Прочее</button>
+<button onclick="openTab('stats')">Итоги</button>
+<button onclick="openTab('car')">Авто</button>
 
 </nav>
 
+<!-- ТОПЛИВО -->
 
 <section id="fuel" class="active">
 
 <h2>Топливо</h2>
 
 <input type="date" id="fuelDate">
-<input type="number" id="fuelLiters" placeholder="Литры">
-<input type="number" id="fuelPrice" placeholder="Стоимость">
-<input type="number" id="fuelOdo" placeholder="Пробег">
+<input type="number" placeholder="Пробег" id="fuelKm">
+<input type="number" placeholder="Литры" id="fuelLiters">
+<input type="number" placeholder="Сумма" id="fuelPrice">
 
-<button onclick="addFuel()">
-Добавить
-</button>
+<button class="main" onclick="addFuel()">Добавить</button>
 
-<div id="fuelList"></div>
+<table id="fuelTable">
+
+<thead>
+<tr>
+<th>Дата</th>
+<th>Пробег</th>
+<th>Литры</th>
+<th>Сумма</th>
+<th>Цена/л</th>
+<th>Расход</th>
+<th></th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
 
 </section>
 
-
+<!-- СЕРВИС -->
 
 <section id="service">
 
 <h2>Сервис</h2>
 
-<p>Раздел сервиса</p>
+<input id="serviceName" placeholder="Работа">
+<input id="servicePrice" type="number" placeholder="Стоимость">
+
+<button class="main" onclick="addService()">Добавить</button>
+
+<ul id="serviceList"></ul>
 
 </section>
 
-
+<!-- ПРОЧЕЕ -->
 
 <section id="other">
 
 <h2>Прочее</h2>
 
-<input id="otherText" placeholder="Комментарий">
+<input id="otherName" placeholder="Описание">
+<input id="otherPrice" type="number" placeholder="Стоимость">
 
-<button onclick="addOther()">
-Добавить
-</button>
+<button class="main" onclick="addOther()">Добавить</button>
 
-<div id="otherList"></div>
+<ul id="otherList"></ul>
 
 </section>
 
-
+<!-- ИТОГИ -->
 
 <section id="stats">
 
 <h2>Итоги</h2>
 
-<canvas id="costChart"></canvas>
-<canvas id="fuelChart"></canvas>
+<p>Топливо: <span id="fuelTotal">0</span></p>
+<p>Сервис: <span id="serviceTotal">0</span></p>
+<p>Прочее: <span id="otherTotal">0</span></p>
+
+<p><b>Всего: <span id="allTotal">0</span></b></p>
+
+<p>Средний расход: <span id="avg">-</span></p>
+<p>Стоимость 1 км: <span id="kmCost">-</span></p>
+
+<canvas id="chartFuel"></canvas>
 
 </section>
 
-
+<!-- АВТО -->
 
 <section id="car">
 
@@ -173,63 +194,26 @@ Belgee X50
 
 <h3>Backup</h3>
 
-<button onclick="exportBackup()">
-Скачать backup
-</button>
+<button class="main" onclick="downloadBackup()">Скачать backup</button>
 
 <br><br>
 
 <input type="file" id="backupFile">
 
-<button onclick="loadBackup()">
-Восстановить backup
-</button>
+<br>
+
+<button class="main" onclick="restoreBackup()">Восстановить backup</button>
 
 </section>
 
-
-
-<script>
-
-function showTab(id){
-
-document.querySelectorAll("section")
-.forEach(s => s.classList.remove("active"));
-
-document.getElementById(id)
-.classList.add("active");
-
-}
-
-</script>
-
-
-
-<script type="module">
-
-import { exportBackup, importBackup } from "./domain/backup.js";
-
-window.exportBackup = exportBackup;
-
-window.loadBackup = function(){
-
-const file =
-document.getElementById("backupFile").files[0];
-
-if(!file){
-
-alert("Выберите файл backup");
-
-return;
-
-}
-
-importBackup(file);
-
-};
-
-</script>
-
+<script src="state.js"></script>
+<script src="storage.js"></script>
+<script src="domain/fuel.js"></script>
+<script src="domain/analytics.js"></script>
+<script src="domain/service.js"></script>
+<script src="domain/other.js"></script>
+<script src="charts.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
