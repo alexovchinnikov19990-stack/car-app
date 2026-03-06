@@ -1,29 +1,27 @@
-import {state} from "../state.js"
-import {validateOdo} from "./validation.js"
+export function calculateFuelData(list){
 
-export function addFuelRecord(date,odo,liters,sum){
+for(let i=0;i<list.length;i++){
 
-if(!validateOdo(state,odo)){
+const item = list[i]
 
-alert("Пробег должен быть больше предыдущего")
+item.price = item.sum / item.liters
 
-return
+if(i===0){
 
-}
+item.consumption = null
 
-state.fuel.push({
+}else{
 
-date,
-odo:Number(odo),
-liters:Number(liters),
-sum:Number(sum)
+const prev = list[i-1]
 
-})
+const distance = item.mileage - prev.mileage
+
+item.consumption = (item.liters / distance) * 100
 
 }
 
-export function removeFuel(i){
+}
 
-state.fuel.splice(i,1)
+return list
 
 }
