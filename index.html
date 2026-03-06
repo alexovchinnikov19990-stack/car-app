@@ -6,162 +6,165 @@
 
 <title>Belgee X50</title>
 
-<link rel="icon" href="icon-192.png">
-
 <style>
-
 body{
-font-family:Arial, sans-serif;
-margin:20px;
-background:#f7f7f7;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:#f4f4f4;
+margin:0;
+padding:20px;
 }
 
 h1{
 text-align:center;
+margin-bottom:30px;
 }
 
-section{
+.card{
 background:white;
-padding:15px;
+border-radius:16px;
+padding:20px;
 margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+.card h2{
+margin-top:0;
 }
 
 input{
-padding:8px;
-margin:5px;
+width:100%;
+padding:12px;
+margin-bottom:10px;
+border-radius:10px;
+border:1px solid #ddd;
+font-size:16px;
 }
 
 button{
-padding:8px 12px;
-margin:5px;
-cursor:pointer;
+padding:12px 20px;
+border:none;
+border-radius:20px;
+background:#e5e5e5;
+font-size:16px;
+}
+
+button:active{
+opacity:0.8;
 }
 
 table{
 width:100%;
+margin-top:15px;
 border-collapse:collapse;
-margin-top:10px;
 }
 
-th,td{
+th{
+text-align:left;
 border-bottom:1px solid #ddd;
-padding:6px;
-text-align:center;
+padding-bottom:8px;
 }
 
-canvas{
-margin-top:20px;
+td{
+padding:8px 0;
+border-bottom:1px solid #eee;
 }
-
 </style>
+
 </head>
 
 <body>
 
 <h1>Belgee X50</h1>
 
-<section>
+<div class="card">
 
 <h2>Топливо</h2>
 
 <input type="date" id="fuelDate">
-<input type="number" id="fuelMileage" placeholder="Пробег">
-<input type="number" id="fuelLiters" placeholder="Литры">
-<input type="number" id="fuelCost" placeholder="Сумма">
+<input type="number" placeholder="Пробег" id="fuelMileage">
+<input type="number" placeholder="Литры" id="fuelLiters">
+<input type="number" placeholder="Сумма" id="fuelCost">
 
 <button id="addFuel">Добавить</button>
 
-<table id="fuelTable">
-
+<table>
 <thead>
 <tr>
 <th>Дата</th>
 <th>Пробег</th>
 <th>Литры</th>
 <th>Сумма</th>
-<th></th>
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody id="fuelTable"></tbody>
 
 </table>
 
-</section>
+</div>
 
-<section>
+
+<div class="card">
 
 <h2>Сервис</h2>
 
-<input type="text" id="serviceName" placeholder="Работа">
-<input type="number" id="serviceCost" placeholder="Стоимость">
+<input type="text" placeholder="Работа" id="serviceName">
+<input type="number" placeholder="Стоимость" id="serviceCost">
 
 <button id="addService">Добавить</button>
 
-<table id="serviceTable">
+<table>
 
 <thead>
 <tr>
 <th>Работа</th>
 <th>Стоимость</th>
-<th></th>
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody id="serviceTable"></tbody>
 
 </table>
 
-</section>
+</div>
 
-<section>
+
+<div class="card">
 
 <h2>Прочее</h2>
 
-<input type="text" id="otherName" placeholder="Описание">
-<input type="number" id="otherCost" placeholder="Стоимость">
+<input type="text" placeholder="Описание" id="otherName">
+<input type="number" placeholder="Стоимость" id="otherCost">
 
 <button id="addOther">Добавить</button>
 
-<table id="otherTable">
+<table>
 
 <thead>
 <tr>
 <th>Описание</th>
 <th>Стоимость</th>
-<th></th>
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody id="otherTable"></tbody>
 
 </table>
 
-</section>
+</div>
 
-<section>
 
-<h2>Backup</h2>
+<script src="state/state.js" defer></script>
+<script src="state/storage.js" defer></script>
 
-<button id="downloadBackup">Скачать backup</button>
-<input type="file" id="restoreBackup">
+<script src="domain/validation.js" defer></script>
+<script src="domain/fuel.js" defer></script>
+<script src="domain/service.js" defer></script>
+<script src="domain/other.js" defer></script>
+<script src="domain/analytics.js" defer></script>
+<script src="domain/backup.js" defer></script>
 
-</section>
-
-<section>
-
-<h2>Аналитика</h2>
-
-<canvas id="fuelChart"></canvas>
-<canvas id="costChart"></canvas>
-
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script type="module" src="./app.js"></script>
+<script src="app.js" defer></script>
 
 </body>
 </html>
