@@ -1,33 +1,41 @@
 function addService(){
 
-let name=document.getElementById("serviceName").value
-let price=Number(document.getElementById("servicePrice").value)
+    const name = document.getElementById("serviceName").value
+    const cost = Number(document.getElementById("serviceCost").value)
 
-if(!name||!price) return
+    if(!name || !cost){
+        alert("Заполни все поля")
+        return
+    }
 
-state.service.push({name,price})
+    APP_STATE.service.push({
+        name,
+        cost
+    })
 
-save()
-
-renderService()
-updateStats()
-
+    saveState()
+    renderService()
 }
 
 function renderService(){
 
-let list=document.getElementById("serviceList")
+    const table = document.getElementById("serviceTable")
 
-list.innerHTML=""
+    if(!table) return
 
-state.service.forEach(s=>{
+    table.innerHTML = ""
 
-let li=document.createElement("li")
+    APP_STATE.service.forEach(row=>{
 
-li.textContent=s.name+" — "+s.price
+        const tr = document.createElement("tr")
 
-list.appendChild(li)
+        tr.innerHTML = `
+        <td>${row.name}</td>
+        <td>${row.cost}</td>
+        `
 
-})
+        table.appendChild(tr)
+
+    })
 
 }
