@@ -1,27 +1,59 @@
-export function calculateFuelData(list){
+// domain/fuel.js
 
-for(let i=0;i<list.length;i++){
+import { state } from "../state/state.js";
 
-const item = list[i]
+export function addFuelRecord(record) {
 
-item.price = item.sum / item.liters
+    state.fuel.push({
+        date: record.date,
+        mileage: Number(record.mileage),
+        liters: Number(record.liters),
+        sum: Number(record.sum)
+    });
 
-if(i===0){
-
-item.consumption = null
-
-}else{
-
-const prev = list[i-1]
-
-const distance = item.mileage - prev.mileage
-
-item.consumption = (item.liters / distance) * 100
-
+    normalizeFuel();
 }
 
+export function deleteFuelRecord(index){
+
+    if(!confirm("Удалить запись?")){
+        return;
+    }
+
+    state.fuel.splice(index,1);
+
+    normalizeFuel();
 }
 
-return list
+export function normalizeFuel(){
+
+    // сортируем по пробегу
+    state.fuel.sort((a,b)=>a.mileage-b.mileage);
+
+    // пересчет расхода
+    recalcConsumption();
+}
+
+function recalcConsumption(){
+
+    for(let i=0;i<state.fuel.length;i++){
+
+        if(i===0){
+            state.fuel[i].consumption=null;
+            continue;
+        }
+
+        const prev=state.fuel[i-1];
+        const cur=state.fuel[i];
+
+        const distance=cur.mileage-prev.mileage;
+
+        if(distance<=0){
+            cur.consumption=null;
+            continue;
+        }
+
+        cur.consumption=(cur.liters/distance)*100;
+    }
 
 }
