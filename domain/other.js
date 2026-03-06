@@ -1,33 +1,41 @@
 function addOther(){
 
-let name=document.getElementById("otherName").value
-let price=Number(document.getElementById("otherPrice").value)
+    const name = document.getElementById("otherName").value
+    const cost = Number(document.getElementById("otherCost").value)
 
-if(!name||!price) return
+    if(!name || !cost){
+        alert("Заполни все поля")
+        return
+    }
 
-state.other.push({name,price})
+    APP_STATE.other.push({
+        name,
+        cost
+    })
 
-save()
-
-renderOther()
-updateStats()
-
+    saveState()
+    renderOther()
 }
 
 function renderOther(){
 
-let list=document.getElementById("otherList")
+    const table = document.getElementById("otherTable")
 
-list.innerHTML=""
+    if(!table) return
 
-state.other.forEach(o=>{
+    table.innerHTML = ""
 
-let li=document.createElement("li")
+    APP_STATE.other.forEach(row=>{
 
-li.textContent=o.name+" — "+o.price
+        const tr = document.createElement("tr")
 
-list.appendChild(li)
+        tr.innerHTML = `
+        <td>${row.name}</td>
+        <td>${row.cost}</td>
+        `
 
-})
+        table.appendChild(tr)
+
+    })
 
 }
