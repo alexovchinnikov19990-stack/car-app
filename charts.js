@@ -1,53 +1,45 @@
-import {state} from "./state.js"
+let chart
 
-let consChart
-let costChart
-let odoChart
+function drawCharts(){
 
-export function drawCharts(){
+if(chart) chart.destroy()
 
-const labels=state.fuel.map(x=>x.date)
-
-const cons=[]
-const cost=[]
-const odo=[]
+let labels=[]
+let data=[]
 
 for(let i=1;i<state.fuel.length;i++){
 
-const prev=state.fuel[i-1]
-const cur=state.fuel[i]
+let prev=state.fuel[i-1]
+let cur=state.fuel[i]
 
-const dist=cur.odo-prev.odo
+let km=cur.km-prev.km
 
-cons.push((cur.liters/dist*100).toFixed(2))
-cost.push(cur.sum)
-odo.push(cur.odo)
+let cons=cur.liters/km*100
+
+labels.push(cur.date)
+data.push(cons)
 
 }
 
-if(consChart)consChart.destroy()
-if(costChart)costChart.destroy()
-if(odoChart)odoChart.destroy()
+chart=new Chart(
 
-consChart=new Chart(
-document.getElementById("consChart"),
+document.getElementById("chartFuel"),
+
 {
 type:"line",
-data:{labels,datasets:[{label:"Расход",data:cons}]}
-})
 
-costChart=new Chart(
-document.getElementById("costChart"),
-{
-type:"line",
-data:{labels,datasets:[{label:"Расходы",data:cost}]}
-})
+data:{
+labels:labels,
 
-odoChart=new Chart(
-document.getElementById("odoChart"),
+datasets:[
 {
-type:"line",
-data:{labels,datasets:[{label:"Пробег",data:odo}]}
+label:"Расход",
+data:data
+}
+]
+
+}
+
 })
 
 }
