@@ -1,39 +1,37 @@
-// domain/analytics.js
+function updateStats(){
 
-import { state } from "../state/state.js";
+let fuel=state.fuel.reduce((s,f)=>s+f.price,0)
 
-export function getAverageConsumption(){
+let service=state.service.reduce((s,f)=>s+f.price,0)
 
-    const values=state.fuel
-        .map(r=>r.consumption)
-        .filter(v=>v!==null);
+let other=state.other.reduce((s,f)=>s+f.price,0)
 
-    if(values.length===0){
-        return 0;
-    }
+let total=fuel+service+other
 
-    const sum=values.reduce((a,b)=>a+b,0);
+document.getElementById("fuelTotal").textContent=fuel
+document.getElementById("serviceTotal").textContent=service
+document.getElementById("otherTotal").textContent=other
 
-    return sum/values.length;
+document.getElementById("allTotal").textContent=total
+
+if(state.fuel.length>1){
+
+let liters=0
+let km=0
+
+for(let i=1;i<state.fuel.length;i++){
+
+liters+=state.fuel[i].liters
+km+=state.fuel[i].km-state.fuel[i-1].km
 
 }
 
-export function getFuelChartData(){
+let avg=(liters/km*100).toFixed(2)
 
-    const labels=[];
-    const values=[];
+document.getElementById("avg").textContent=avg
 
-    state.fuel.forEach(r=>{
+document.getElementById("kmCost").textContent=(fuel/km).toFixed(2)
 
-        if(r.consumption!==null){
-
-            labels.push(r.date);
-            values.push(r.consumption);
-
-        }
-
-    });
-
-    return {labels,values};
+}
 
 }
