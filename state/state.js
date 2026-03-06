@@ -1,16 +1,17 @@
-// state/state.js
+export const state = {
 
-export const state={
-
-    car:{
-        name:"Belgee X50",
-        startMileage:5
+    car: {
+        name: "Belgee X50",
+        startMileage: 5
     },
 
-    fuel:[],
+    fuel: [],
+    service: [],
+    other: [],
 
-    service:[],
+    meta: {
+        version: "8.0",
+        lastUpdate: null
+    }
 
-    other:[]
-
-};
+}
