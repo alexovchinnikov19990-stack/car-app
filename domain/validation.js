@@ -1,9 +1,27 @@
-export function validateMileage(newMileage, fuelList){
+// domain/validation.js
 
-if(fuelList.length === 0) return true
+export function validateFuelInput(data){
 
-const maxMileage = Math.max(...fuelList.map(f => f.mileage))
+    if(!data.date){
+        alert("Укажите дату");
+        return false;
+    }
 
-return newMileage > maxMileage
+    if(data.mileage<=0){
+        alert("Некорректный пробег");
+        return false;
+    }
+
+    if(data.liters<=0){
+        alert("Некорректный объем топлива");
+        return false;
+    }
+
+    if(data.sum<0){
+        alert("Некорректная сумма");
+        return false;
+    }
+
+    return true;
 
 }
