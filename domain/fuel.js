@@ -1,59 +1,79 @@
-// domain/fuel.js
+function addFuel(){
 
-import { state } from "../state/state.js";
+let date = document.getElementById("fuelDate").value
+let km = Number(document.getElementById("fuelKm").value)
+let liters = Number(document.getElementById("fuelLiters").value)
+let price = Number(document.getElementById("fuelPrice").value)
 
-export function addFuelRecord(record) {
+if(!date || !km || !liters || !price) return
 
-    state.fuel.push({
-        date: record.date,
-        mileage: Number(record.mileage),
-        liters: Number(record.liters),
-        sum: Number(record.sum)
-    });
+state.fuel.push({date,km,liters,price})
 
-    normalizeFuel();
+state.fuel.sort((a,b)=> new Date(a.date)-new Date(b.date))
+
+save()
+
+renderFuel()
+updateStats()
+drawCharts()
+
 }
 
-export function deleteFuelRecord(index){
+function deleteFuel(i){
 
-    if(!confirm("Удалить запись?")){
-        return;
-    }
+if(!confirm("Удалить запись?")) return
 
-    state.fuel.splice(index,1);
+state.fuel.splice(i,1)
 
-    normalizeFuel();
+save()
+
+renderFuel()
+updateStats()
+drawCharts()
+
 }
 
-export function normalizeFuel(){
+function renderFuel(){
 
-    // сортируем по пробегу
-    state.fuel.sort((a,b)=>a.mileage-b.mileage);
+let tbody = document.querySelector("#fuelTable tbody")
 
-    // пересчет расхода
-    recalcConsumption();
+tbody.innerHTML=""
+
+state.fuel.forEach((f,i)=>{
+
+let prev = state.fuel[i-1]
+
+let pricePer = (f.price/f.liters).toFixed(2)
+
+let cons="-"
+
+if(prev){
+
+let km = f.km-prev.km
+
+cons = (f.liters/km*100).toFixed(2)
+
 }
 
-function recalcConsumption(){
+tbody.innerHTML+=`
 
-    for(let i=0;i<state.fuel.length;i++){
+<tr>
 
-        if(i===0){
-            state.fuel[i].consumption=null;
-            continue;
-        }
+<td>${f.date}</td>
+<td>${f.km}</td>
+<td>${f.liters}</td>
+<td>${f.price}</td>
+<td>${pricePer}</td>
+<td>${cons}</td>
 
-        const prev=state.fuel[i-1];
-        const cur=state.fuel[i];
+<td>
+<button onclick="deleteFuel(${i})">X</button>
+</td>
 
-        const distance=cur.mileage-prev.mileage;
+</tr>
 
-        if(distance<=0){
-            cur.consumption=null;
-            continue;
-        }
+`
 
-        cur.consumption=(cur.liters/distance)*100;
-    }
+})
 
 }
