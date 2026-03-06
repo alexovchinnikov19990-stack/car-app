@@ -1,55 +1,27 @@
-load()
+document.addEventListener("DOMContentLoaded", initApp)
 
-renderFuel()
-renderService()
-renderOther()
-updateStats()
-drawCharts()
+function initApp(){
 
-function openTab(id){
+    console.log("APP STARTED")
 
-  document.querySelectorAll("section").forEach(s=>{
-    s.classList.remove("active")
-  })
+    if(typeof renderFuel === "function"){
+        renderFuel()
+    }
 
-  document.getElementById(id).classList.add("active")
+    if(typeof renderService === "function"){
+        renderService()
+    }
 
-}
+    if(typeof renderOther === "function"){
+        renderOther()
+    }
 
-function downloadBackup(){
+    if(typeof updateStats === "function"){
+        updateStats()
+    }
 
-let data = JSON.stringify(state)
-
-let blob = new Blob([data],{type:"application/json"})
-
-let a = document.createElement("a")
-
-a.href = URL.createObjectURL(blob)
-
-a.download = "car_backup.json"
-
-a.click()
-
-}
-
-function restoreBackup(){
-
-let file = document.getElementById("backupFile").files[0]
-
-if(!file) return
-
-let reader = new FileReader()
-
-reader.onload = function(){
-
-state = JSON.parse(reader.result)
-
-save()
-
-location.reload()
-
-}
-
-reader.readAsText(file)
+    if(typeof drawCharts === "function"){
+        drawCharts()
+    }
 
 }
