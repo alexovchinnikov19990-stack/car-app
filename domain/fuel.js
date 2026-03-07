@@ -1,49 +1,95 @@
 function addFuel(){
 
-    const date = document.getElementById("fuelDate").value
-    const odo = Number(document.getElementById("fuelOdo").value)
-    const liters = Number(document.getElementById("fuelLiters").value)
-    const price = Number(document.getElementById("fuelPrice").value)
+    const date = document.getElementById("fuel_date").value
+    const odometer = Number(document.getElementById("fuel_odometer").value)
+    const liters = Number(document.getElementById("fuel_liters").value)
+    const price = Number(document.getElementById("fuel_price").value)
 
-    if(!date || !odo || !liters || !price){
-        alert("Заполни все поля")
+    if(!date || !odometer || !liters || !price){
+        alert("Заполните все поля")
         return
     }
 
-    APP_STATE.fuel.push({
+    state.fuel.push({
+        id: Date.now(),
         date,
-        odo,
+        odometer,
         liters,
         price
     })
 
     saveState()
+
     renderFuel()
+    updateStats()
+    drawCharts()
+}
+
+function deleteFuel(id){
+
+    if(!confirm("Удалить запись?")){
+        return
+    }
+
+    state.fuel = state.fuel.filter(f => f.id !== id)
+
+    saveState()
+
+    renderFuel()
+    updateStats()
+    drawCharts()
 }
 
 function renderFuel(){
 
-    const table = document.getElementById("fuelTable")
+    const table = document.getElementById("fuel_table")
 
     if(!table) return
 
-    table.innerHTML = ""
+    const fuelSorted = [...state.fuel].sort((a,b)=>a.date.localeCompare(b.date))
 
-    APP_STATE.fuel.forEach(row=>{
+    let html = ""
 
-        const tr = document.createElement("tr")
+    fuelSorted.forEach(f => {
 
-        const sum = (row.liters * row.price).toFixed(2)
-
-        tr.innerHTML = `
-        <td>${row.date}</td>
-        <td>${row.odo}</td>
-        <td>${row.liters}</td>
-        <td>${sum}</td>
+        html += `
+        <tr>
+            <td>${f.date}</td>
+            <td>${f.odometer}</td>
+            <td>${f.liters}</td>
+            <td>${f.price}</td>
+            <td>
+                <button onclick="deleteFuel(${f.id})">✕</button>
+            </td>
+        </tr>
         `
-
-        table.appendChild(tr)
-
     })
 
+    table.innerHTML = html
+}
+
+function calculateFuelConsumption(){
+
+    const fuelSorted = [...state.fuel].sort((a,b)=>a.date.localeCompare(b.date))
+
+    const results = []
+
+    for(let i=1;i<fuelSorted.length;i++){
+
+        const prev = fuelSorted[i-1]
+        const curr = fuelSorted[i]
+
+        const distance = curr.odometer - prev.odometer
+
+        if(distance <= 0) continue
+
+        const consumption = (curr.liters / distance) * 100
+
+        results.push({
+            date: curr.date,
+            value: Number(consumption.toFixed(2))
+        })
+    }
+
+    return results
 }
